@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Lector EPUB amb veu (TTS)</title>
+  <style>
+    :root { color-scheme: light; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background:#f6f7fb; color:#111; }
+    header { position: sticky; top: 0; background: white; border-bottom: 1px solid #e6e7ef; padding: 12px 14px; z-index: 5; }
+    .row { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+    main { max-width: 980px; margin: 0 auto; padding: 14px; display:grid; grid-template-columns: 300px 1fr; gap: 14px; }
+    @media (max-width: 900px){ main{ grid-template-columns: 1fr; } }
+    .card { background:white; border:1px solid #e6e7ef; border-radius: 12px; overflow:hidden; }
+    .card h2 { font-size: 14px; margin:0; padding:12px 12px; border-bottom:1px solid #eef; background:#fafbff;}
+    .card .content { padding: 12px; }
+    button, select, input[type="range"] { font: inherit; }
+    button { border:1px solid #d8daea; background:white; padding:8px 10px; border-radius:10px; cursor:pointer; }
+    button.primary { background:#111827; color:white; border-color:#111827; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    select { border:1px solid #d8daea; padding:8px 10px; border-radius:10px; background:white; max-width: 360px; }
+    .small { font-size: 12px; color:#444; }
+    .toc { max-height: calc(100vh - 260px); overflow:auto; }
+    .toc a { display:block; padding: 8px 10px; border-radius: 10px; color:#111; text-decoration:none; }
+    .toc a:hover { background:#f2f3fb; }
+    .toc a.active { background:#111827; color:white; }
+    #reader { padding: 18px 18px; line-height: 1.55; font-size: 18px; }
+    #reader p { margin: 0 0 1em 0; }
+    #reader .hl { background: #fff3b0; border-radius: 6px; padding: 0 2px; }
+    .meta { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+    .meta span { background:#f2f3fb; border:1px solid #e6e7ef; padding:6px 8px; border-radius:999px; font-size:12px; }
+    .warn { background:#fff7ed; border:1px solid #fed7aa; padding:10px; border-radius:12px; }
+    .danger { background:#fff1f2; border:1px solid #fecdd3; padding:10px; border-radius:12px; }
+    .progress { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:10px;}
+    .progress input[type="range"] { width: 220px; }
+    pre { white-space: pre-wrap; word-break: break-word; margin: 0; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="row">
+      <strong>📚 Lector EPUB amb veu (TTS)</strong>
+      <span class="small">Carrega un EPUB i escolta’l amb la veu del teu dispositiu</span>
+    </div>
+
+    <div class="row" style="margin-top:10px">
+      <input id="file" type="file" accept=".epub,application/epub+zip" />
+      <button id="btnPrev" disabled>◀ Capítol</button>
+      <button id="btnNext" disabled>Capítol ▶</button>
+
+      <button id="btnPlay" class="primary" disabled>▶ Llegeix</button>
+      <button id="btnPause" disabled>⏸ Pausa</button>
+      <button id="btnStop" disabled>⏹ Atura</button>
+
+      <label class="small">Velocitat
+        <input id="rate" type="range" min="0.6" max="1.6" step="0.1" value="1.0" />
+        <span id="rateVal">1.0×</span>
+      </label>
+
+      <select id="voice"></select>
+    </div>
+
+    <div class="row progress">
+      <span class="small">Posició:</span>
+      <input id="pos" type="range" min="0" max="0" step="1" value="0" disabled />
+      <span id="posVal" class="small">0 / 0</span>
+      <span id="status" class="small"></span>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Taula de continguts</h2>
+      <div class="content">
+        <div id="bookMeta" class="meta"></div>
+        <div id="toc" class="toc"></div>
+
+        <div id="compat" class="warn small" style="margin-top:12px; display:none"></div>
+
+        <div class="danger" style="margin-top:12px;">
+          <div class="small" style="margin-bottom:6px;"><strong>Log</strong> (tipus i longitud de càrrega)</div>
+          <pre id="log">—</pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Lectura</h2>
+      <div id="reader" class="content">
+        <p class="small">Carrega un fitxer EPUB per començar.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- JSZip primer -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <!-- epub.js després -->
+  <script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.92/dist/epub.min.js"></script>
+
+  <script>
+    // ===== UI =====
+    const els = {
+      file: document.getElementById('file'),
+      toc: document.getElementById('toc'),
+      reader: document.getElementById('reader'),
+      btnPrev: document.getElementById('btnPrev'),
+      btnNext: document.getElementById('btnNext'),
+      btnPlay: document.getElementById('btnPlay'),
+      btnPause: document.getElementById('btnPause'),
+      btnStop: document.getElementById('btnStop'),
+      voice: document.getElementById('voice'),
+      rate: document.getElementById('rate'),
+      rateVal: document.getElementById('rateVal'),
+      status: document.getElementById('status'),
+      pos: document.getElementById('pos'),
+      posVal: document.getElementById('posVal'),
+      bookMeta: document.getElementById('bookMeta'),
+      compat: document.getElementById('compat'),
+      log: document.getElementById('log'),
+    };
+
+    function log(msg){
+      const line = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      els.log.textContent = (els.log.textContent === '—') ? line : (els.log.textContent + "\n" + line);
+    }
+    window.addEventListener('error', (e) => log(`JS ERROR: ${e.message}`));
+    window.addEventListener('unhandledrejection', (e) => log(`PROMISE ERROR: ${String(e.reason || e)}`));
+
+    function setStatus(msg){ els.status.textContent = msg || ''; }
+    function esc(s){ return (s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    function isSpeechSupported(){
+      return ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window);
+    }
+
+    function showCompatWarning(){
+      let warnings = [];
+      if (!isSpeechSupported()) warnings.push("Aquest navegador no suporta TTS. Prova Chrome o Edge.");
+      if (!window.JSZip) warnings.push("No s'ha carregat JSZip (CDN bloquejat?).");
+      if (typeof window.ePub !== 'function') warnings.push("No s'ha carregat epub.js (CDN bloquejat?).");
+      if (warnings.length){
+        els.compat.style.display = 'block';
+        els.compat.innerHTML = warnings.map(w => `• ${esc(w)}`).join('<br>');
+      } else {
+        els.compat.style.display = 'none';
+      }
+    }
+
+    function cleanText(text){
+      return (text || '').replace(/\s+/g, ' ').replace(/\u00AD/g, '').trim();
+    }
+
+    function splitIntoSentences(text){
+      const t = cleanText(text);
+      if (!t) return [];
+      const parts = t.split(/(?<=[\.\!\?…])\s+(?=[“"'\(\[]?[A-ZÀ-Ü])/g);
+      if (parts.length <= 1) return t.split(/\n+/g).map(cleanText).filter(Boolean);
+      return parts.map(cleanText).filter(Boolean);
+    }
+
+    function populateVoices(){
+      if (!isSpeechSupported()) return;
+      const voices = speechSynthesis.getVoices();
+      els.voice.innerHTML = '';
+      const rank = (v) => {
+        const lang = (v.lang || '').toLowerCase();
+        if (lang.startsWith('ca')) return 0;
+        if (lang.startsWith('es')) return 1;
+        return 2;
+      };
+      voices.sort((a,b)=> rank(a)-rank(b) || (a.lang||'').localeCompare(b.lang||'') || (a.name||'').localeCompare(b.name||''));
+      for (const v of voices){
+        const opt = document.createElement('option');
+        opt.value = v.name;
+        opt.textContent = `${v.name} — ${v.lang}${v.default ? ' (per defecte)' : ''}`;
+        els.voice.appendChild(opt);
+      }
+      const ca = voices.find(v => (v.lang||'').toLowerCase().startsWith('ca'));
+      const def = voices.find(v => v.default);
+      const pick = ca || def || voices[0];
+      if (pick) els.voice.value = pick.name;
+    }
+
+    function getSelectedVoice(){
+      if (!isSpeechSupported()) return null;
+      const name = els.voice.value;
+      return speechSynthesis.getVoices().find(v => v.name === name) || null;
+    }
+
+    // ===== Estat EPUB =====
+    let book = null;
+    let spine = [];
+    let tocItems = [];
+    let currentSpineIndex = 0;
+
+    // ===== Estat TTS =====
+    let utter = null;
+    let speaking = false;
+    let paused = false;
+    let sentences = [];
+    let sentenceIndex = 0;
+
+    function stopSpeaking(){
+      if (!isSpeechSupported()) return;
+      speechSynthesis.cancel();
+      utter = null;
+      speaking = false;
+      paused = false;
+    }
+
+    function highlightSentence(i){
+      if (!sentences.length) return;
+      const before = sentences.slice(0, i).join(' ');
+      const current = sentences[i] || '';
+      const after = sentences.slice(i+1).join(' ');
+      els.reader.innerHTML = `<p>${esc(before)} ${current ? `<span class="hl">${esc(current)}</span>` : ''} ${esc(after)}</p>`;
+    }
+
+    function speakCurrentSentence(){
+      if (!isSpeechSupported()) return;
+
+      if (!sentences.length){
+        setStatus('Aquest capítol no té text per llegir.');
+        return;
+      }
+
+      if (sentenceIndex >= sentences.length){
+        if (currentSpineIndex < spine.length - 1){
+          renderSpineIndex(currentSpineIndex + 1).then(() => {
+            sentenceIndex = 0;
+            startSpeaking();
+          });
+        } else {
+          stopSpeaking();
+          setStatus('Fi del llibre.');
+        }
+        return;
+      }
+
+      const text = sentences[sentenceIndex];
+      utter = new SpeechSynthesisUtterance(text);
+      utter.rate = Number(els.rate.value) || 1.0;
+      const v = getSelectedVoice();
+      if (v) utter.voice = v;
+
+      utter.onstart = () => {
+        speaking = true;
+        paused = false;
+        setStatus(`Llegint… (${sentenceIndex + 1}/${sentences.length})`);
+        highlightSentence(sentenceIndex);
+      };
+      utter.onend = () => { sentenceIndex += 1; speakCurrentSentence(); };
+      utter.onerror = (ev) => {
+        log(`TTS ERROR: ${ev?.error || 'unknown'}`);
+        setStatus('Error TTS. Prova una altra veu/navegador.');
+        stopSpeaking();
+      };
+
+      speechSynthesis.speak(utter);
+    }
+
+    function startSpeaking(){
+      if (!isSpeechSupported()) return;
+      speechSynthesis.cancel();
+      speaking = true;
+      paused = false;
+      speakCurrentSentence();
+    }
+
+    function pauseSpeaking(){
+      if (!isSpeechSupported() || !speaking) return;
+      speechSynthesis.pause();
+      paused = true;
+      setStatus('En pausa.');
+    }
+
+    function resumeSpeaking(){
+      if (!isSpeechSupported() || !speaking || !paused) return;
+      speechSynthesis.resume();
+      paused = false;
+      setStatus('Reprenent…');
+    }
+
+    // ===== Navegació =====
+    function enableControls(enabled){
+      els.btnPrev.disabled = !enabled;
+      els.btnNext.disabled = !enabled;
+      els.btnPlay.disabled = !enabled || !isSpeechSupported();
+      els.btnPause.disabled = !enabled || !isSpeechSupported();
+      els.btnStop.disabled = !enabled || !isSpeechSupported();
+      els.pos.disabled = !enabled;
+    }
+
+    function updatePosUI(){
+      els.pos.max = Math.max(0, spine.length - 1);
+      els.pos.value = currentSpineIndex;
+      els.posVal.textContent = `${currentSpineIndex + 1} / ${spine.length || 0}`;
+    }
+
+    function setActiveToc(spineIndex){
+      const links = els.toc.querySelectorAll('a[data-spine]');
+      links.forEach(a => a.classList.toggle('active', Number(a.dataset.spine) === spineIndex));
+    }
+
+    // ===== Càrrega robusta de capítols =====
+    async function loadChapterMarkup(item){
+      const candidates = [];
+      if (item?.href) candidates.push(item.href);
+      if (item?.url) candidates.push(item.url);
+      if (item?.href) candidates.push(decodeURI(item.href));
+      if (item?.url) candidates.push(decodeURI(item.url));
+
+      const uniq = [...new Set(candidates.filter(Boolean).map(s => String(s).replace(/^\/+/, '')))];
+      log(`Candidats càrrega: ${uniq.join(' | ')}`);
+
+      async function toString(content){
+        if (!content) return '';
+        if (typeof content === 'string') return content;
+
+        // Document
+        if (content.nodeType && content.nodeType === 9) {
+          try { return new XMLSerializer().serializeToString(content); } catch { return ''; }
+        }
+
+        // Blob
+        if (content instanceof Blob) {
+          try { return await content.text(); } catch { return ''; }
+        }
+
+        // ArrayBuffer
+        if (content instanceof ArrayBuffer) {
+          try { return new TextDecoder('utf-8').decode(new Uint8Array(content)); } catch { return ''; }
+        }
+
+        // Uint8Array o similar
+        if (content?.buffer instanceof ArrayBuffer && typeof content?.byteLength === 'number') {
+          try { return new TextDecoder('utf-8').decode(new Uint8Array(content)); } catch { return ''; }
+        }
+
+        return '';
+      }
+
+      // VIA A) item.load
+      if (item?.load) {
+        try {
+          const doc = await item.load(book.load.bind(book));
+          const s = await toString(doc);
+          log(`VIA A item.load -> type=${doc?.constructor?.name || typeof doc} len=${s.length}`);
+          if (s.trim()) return s;
+        } catch (e) {
+          log(`VIA A item.load ERROR: ${e?.message || String(e)}`);
+        }
+      }
+
+      // VIA B) book.load per candidat
+      for (const p of uniq) {
+        try {
+          const raw = await book.load(p);
+          const s = await toString(raw);
+          log(`VIA B book.load("${p}") -> type=${raw?.constructor?.name || typeof raw} len=${s.length}`);
+          if (s.trim()) return s;
+        } catch (e) {
+          log(`VIA B book.load("${p}") ERROR: ${e?.message || String(e)}`);
+        }
+      }
+
+      // VIA C) archive.getText
+      if (book.archive && typeof book.archive.getText === 'function') {
+        for (const p of uniq) {
+          try {
+            const t = await book.archive.getText(p);
+            log(`VIA C archive.getText("${p}") len=${(t || '').length}`);
+            if ((t || '').trim()) return t;
+          } catch (e) {
+            log(`VIA C getText("${p}") ERROR: ${e?.message || String(e)}`);
+          }
+        }
+      }
+
+      return '';
+    }
+
+    function extractTextAndHtml(markup){
+      const parser = new DOMParser();
+      let doc = parser.parseFromString(markup, 'application/xhtml+xml');
+      if (doc.querySelector('parsererror')) doc = parser.parseFromString(markup, 'text/html');
+
+      const body = doc.body || doc.querySelector('body');
+      if (!body) return { lines: [], text: '' };
+
+      body.querySelectorAll('script,style,noscript').forEach(n => n.remove());
+
+      // Incloem div/span perquè alguns EPUB posen tot dins d’un contenidor únic
+      const blocks = Array.from(body.querySelectorAll('h1,h2,h3,h4,h5,h6,p,li,blockquote,div,span'));
+      let lines = [];
+
+      if (blocks.length){
+        lines = blocks
+          .map(b => cleanText(b.textContent))
+          .filter(t => t && t.length > 1);
+      } else {
+        const t = cleanText(body.textContent);
+        if (t) lines = [t];
+      }
+
+      // evita duplicació massiva (div/span pot duplicar contingut); fem dedup simple
+      const dedup = [];
+      const seen = new Set();
+      for (const l of lines){
+        const key = l.slice(0, 120);
+        if (!seen.has(key)){
+          seen.add(key);
+          dedup.push(l);
+        }
+      }
+
+      const text = cleanText(dedup.join(' '));
+      return { lines: dedup, text };
+    }
+
+    async function renderSpineIndex(idx){
+      if (!book) return;
+      stopSpeaking();
+
+      currentSpineIndex = Math.max(0, Math.min(idx, spine.length - 1));
+      updatePosUI();
+      setActiveToc(currentSpineIndex);
+
+      const item = spine[currentSpineIndex];
+      setStatus('Carregant capítol…');
+      log(`Render spineIndex=${currentSpineIndex} href=${item?.href} url=${item?.url || ''}`);
+
+      try {
+        const markup = await loadChapterMarkup(item);
+
+        if (!markup || !markup.trim()) {
+          els.reader.innerHTML = `<p class="small">No s'ha pogut llegir el fitxer del capítol (càrrega buida). Mira el log.</p>`;
+          sentences = [];
+          sentenceIndex = 0;
+          setStatus('Capítol no llegible (càrrega buida).');
+          log('Capítol: markup buit després de totes les vies.');
+          return;
+        }
+
+        const { lines, text } = extractTextAndHtml(markup);
+
+        if (!text) {
+          els.reader.innerHTML = `<p class="small">Capítol carregat però sense text extraïble (pot ser SVG/imatges). Mira el log.</p>`;
+          sentences = [];
+          sentenceIndex = 0;
+          setStatus('Capítol sense text extraïble.');
+          log('Markup NO buit però text extret buit.');
+          return;
+        }
+
+        // Render (limitem per no petar UI)
+        els.reader.innerHTML = lines.slice(0, 450).map(t => `<p>${esc(t)}</p>`).join('');
+        sentences = splitIntoSentences(text);
+        sentenceIndex = 0;
+
+        setStatus(`Capítol carregat. Frases: ${sentences.length}`);
+        log(`Capítol OK. textLen=${text.length} sentences=${sentences.length}`);
+      } catch (e){
+        console.error(e);
+        els.reader.innerHTML = `<p class="small">Error carregant capítol.</p>`;
+        setStatus('Error carregant capítol.');
+        log(`ERROR render: ${e?.message || String(e)}`);
+      }
+    }
+
+    function buildTocUI(){
+      els.toc.innerHTML = '';
+      for (const it of tocItems){
+        const a = document.createElement('a');
+        a.href = '#';
+        a.textContent = it.label || '(sense títol)';
+        a.dataset.spine = String(it.spineIndex);
+        a.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          renderSpineIndex(it.spineIndex);
+        });
+        els.toc.appendChild(a);
+      }
+    }
+
+    async function findFirstTextSpineIndex(maxScan = 12){
+      const limit = Math.min(spine.length, maxScan);
+      for (let i = 0; i < limit; i++){
+        try {
+          const item = spine[i];
+          const markup = await loadChapterMarkup(item);
+          if (!markup) continue;
+          const { text } = extractTextAndHtml(markup);
+          if (text && text.length >= 30) return i;
+        } catch {}
+      }
+      return 0;
+    }
+
+    // ===== Carrega EPUB =====
+    async function loadEpub(file){
+      els.log.textContent = '—';
+      showCompatWarning();
+
+      if (!window.JSZip) { setStatus('JSZip no carregat.'); log('JSZip missing'); return; }
+      if (typeof window.ePub !== 'function') { setStatus('epub.js no carregat.'); log('ePub missing'); return; }
+
+      stopSpeaking();
+      els.reader.innerHTML = '<p class="small">Carregant EPUB…</p>';
+      setStatus('Carregant EPUB…');
+      log(`Fitxer: ${file.name} ${Math.round(file.size/1024)} KB`);
+
+      enableControls(false);
+
+      try {
+        const buf = await file.arrayBuffer();
+        book = ePub(buf);
+        await book.ready;
+
+        const meta = await book.loaded.metadata;
+        els.bookMeta.innerHTML = '';
+        const chips = [];
+        if (meta?.title) chips.push(`<span>📖 ${esc(meta.title)}</span>`);
+        if (meta?.creator) chips.push(`<span>✍️ ${esc(meta.creator)}</span>`);
+        if (meta?.language) chips.push(`<span>🌐 ${esc(meta.language)}</span>`);
+        els.bookMeta.innerHTML = chips.join('');
+
+        spine = book.spine?.spineItems || [];
+        if (!spine.length) throw new Error('Spine buit (EPUB malformat o DRM)');
+
+        const nav = await book.loaded.navigation;
+
+        tocItems = [];
+        function walk(items){
+          for (const it of (items || [])){
+            const href = it.href || '';
+            let si = spine.findIndex(s => (s.href || '').split('#')[0] === href.split('#')[0]);
+            if (si < 0) si = 0;
+            tocItems.push({ label: it.label, href, spineIndex: si });
+            if (it.subitems?.length) walk(it.subitems);
+          }
+        }
+        walk(nav?.toc);
+
+        if (!tocItems.length){
+          tocItems = spine.map((s, i) => ({ label: s.idref || `Capítol ${i+1}`, href: s.href, spineIndex: i }));
+          log('TOC fallback: per spine.');
+        }
+
+        buildTocUI();
+        enableControls(true);
+
+        // Busca primer capítol amb text (amb la càrrega robusta)
+        const startIdx = await findFirstTextSpineIndex(12);
+        currentSpineIndex = startIdx;
+        updatePosUI();
+        await renderSpineIndex(startIdx);
+
+        setStatus('EPUB carregat.');
+        log(`EPUB OK (startIdx=${startIdx})`);
+      } catch (e){
+        console.error(e);
+        els.reader.innerHTML = `<p class="small">No s'ha pogut carregar l'EPUB.</p>`;
+        setStatus('Error carregant EPUB.');
+        log(`ERROR loadEpub: ${e?.message || String(e)}`);
+        log('Si té DRM, un lector web no el podrà obrir.');
+        enableControls(false);
+      }
+    }
+
+    // ===== Events =====
+    els.file.addEventListener('change', (ev) => {
+      const f = ev.target.files?.[0];
+      if (f) loadEpub(f);
+    });
+
+    els.btnPrev.addEventListener('click', () => renderSpineIndex(currentSpineIndex - 1));
+    els.btnNext.addEventListener('click', () => renderSpineIndex(currentSpineIndex + 1));
+
+    els.btnPlay.addEventListener('click', () => {
+      if (!isSpeechSupported()) return;
+      if (speaking && paused) resumeSpeaking();
+      else startSpeaking();
+    });
+    els.btnPause.addEventListener('click', () => pauseSpeaking());
+    els.btnStop.addEventListener('click', () => { stopSpeaking(); setStatus('Aturat.'); });
+
+    els.rate.addEventListener('input', () => {
+      els.rateVal.textContent = `${Number(els.rate.value).toFixed(1)}×`;
+    });
+
+    els.pos.addEventListener('input', () => {
+      const idx = Number(els.pos.value) || 0;
+      els.posVal.textContent = `${idx + 1} / ${spine.length || 0}`;
+    });
+    els.pos.addEventListener('change', () => {
+      const idx = Number(els.pos.value) || 0;
+      renderSpineIndex(idx);
+    });
+
+    // Init
+    showCompatWarning();
+    if (isSpeechSupported()){
+      populateVoices();
+      speechSynthesis.onvoiceschanged = populateVoices;
+    } else {
+      els.voice.innerHTML = '<option>No disponible</option>';
+    }
+    window.addEventListener('beforeunload', () => { try { stopSpeaking(); } catch {} });
+  </script>
+</body>
+</html>
