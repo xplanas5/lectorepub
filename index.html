@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Lector EPUB amb veu (TTS) Pro</title>
+  <title>Lector EPUB TTS Pro</title>
   <style>
     :root {
       --primary: #2563eb;
@@ -38,7 +38,6 @@
       overflow: hidden;
     }
 
-    /* --- UI STRUCTURE --- */
     header {
       background: var(--card-bg);
       border-bottom: 1px solid var(--border);
@@ -92,15 +91,14 @@
     .toc a.active { background: var(--primary); color: white; }
 
     .reader-container { background: var(--bg); display: flex; flex-direction: column; overflow: hidden; position: relative; }
-    #reader { flex: 1; overflow-y: auto; padding: 3rem 12%; line-height: 1.8; font-size: 1.25rem; scroll-behavior: smooth; }
-    #reader p { margin-bottom: 1.2em; }
-    .hl { background-color: var(--highlight); border-radius: 6px; padding: 0 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .chapter-header { padding: 0.8rem 12%; background: var(--card-bg); border-bottom: 1px solid var(--border); font-weight: 700; color: var(--primary); font-size: 0.9rem; }
+    #reader { flex: 1; overflow-y: auto; padding: 2.5rem 12%; line-height: 1.8; font-size: 1.25rem; scroll-behavior: smooth; }
+    #reader p { margin-bottom: 1.3em; }
+    .hl { background-color: var(--highlight); border-radius: 4px; padding: 0 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
 
-    /* --- UTILS --- */
-    .warn { background:#fff7ed; color: #9a3412; border: 1px solid #fed7aa; padding: 8px; border-radius: 8px; font-size: 11px; margin: 10px; }
     .log-area {
       padding: 0.5rem; background: rgba(0,0,0,0.05); color: var(--text-muted);
-      font-family: monospace; font-size: 0.65rem; max-height: 100px; overflow-y: auto; border-top: 1px solid var(--border);
+      font-family: monospace; font-size: 0.65rem; max-height: 80px; overflow-y: auto; border-top: 1px solid var(--border);
     }
 
     .progress-bar {
@@ -108,7 +106,7 @@
       display: flex; align-items: center; gap: 1rem;
     }
 
-    input[type="range"] { flex: 1; accent-color: var(--primary); cursor: pointer; }
+    input[type="range"] { flex: 1; accent-color: var(--primary); }
     .status-badge { font-size: 0.7rem; padding: 2px 10px; border-radius: 12px; background: var(--primary); color: white; font-weight: 600; }
   </style>
 </head>
@@ -121,19 +119,18 @@
     </div>
     
     <div class="header-controls">
-      <button id="btnPrev" disabled>⏮ Capítol</button>
-      <button id="btnPlay" class="primary" disabled>▶ Llegeix</button>
+      <button id="btnPrev" disabled>⏮</button>
+      <button id="btnPlay" class="primary" disabled>▶ Reproduir</button>
       <button id="btnPause" disabled>⏸ Pausa</button>
       <button id="btnStop" disabled>⏹ Atura</button>
-      <button id="btnNext" disabled>Capítol ⏭</button>
+      <button id="btnNext" disabled>⏭</button>
 
       <div style="width: 1px; height: 20px; background: var(--border);"></div>
       
       <select id="voice"></select>
       
       <label style="font-size: 0.8rem; display:flex; align-items:center; gap:5px;">
-        Velocitat:
-        <input id="rate" type="range" min="0.6" max="1.6" step="0.1" value="1.0" style="width:60px" />
+        <input id="rate" type="range" min="0.6" max="1.8" step="0.1" value="1.0" style="width:60px" />
         <span id="rateVal">1.0×</span>
       </label>
     </div>
@@ -141,25 +138,22 @@
 
   <main>
     <aside>
-      <div class="section-title">Continguts</div>
-      <div id="compat" class="warn" style="display:none"></div>
+      <div class="section-title">Metadades i Índex</div>
       <div id="bookMeta" style="padding: 1rem; font-size: 0.85rem; border-bottom: 1px solid var(--border); line-height: 1.4;"></div>
       <div id="toc" class="toc"></div>
       <div class="log-area" id="log">—</div>
     </aside>
 
     <div class="reader-container">
+      <div id="chapterTitle" class="chapter-header">Capítol no seleccionat</div>
       <div id="reader">
-        <div style="text-align:center; color:var(--text-muted); margin-top:5rem;">
-          <p style="font-size: 3rem; margin-bottom:1rem;">📖</p>
-          <p>Carrega un fitxer EPUB per començar.</p>
-        </div>
+        <p style="text-align:center; color:var(--text-muted); margin-top:4rem;">Carrega un fitxer per començar</p>
       </div>
       
       <div class="progress-bar">
         <span id="posVal" style="font-size:0.8rem; font-weight:600; min-width:65px; color:var(--text-muted)">0 / 0</span>
         <input id="pos" type="range" min="0" max="0" step="1" value="0" disabled />
-        <span id="status" class="status-badge">ESPERANT</span>
+        <span id="status" class="status-badge">INACTIU</span>
       </div>
     </div>
   </main>
@@ -168,11 +162,12 @@
   <script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.92/dist/epub.min.js"></script>
 
   <script>
-    // ===== CONFIGURACIÓ I UI =====
+    // ===== CONFIGURACIÓ =====
     const els = {
       file: document.getElementById('file'),
       toc: document.getElementById('toc'),
       reader: document.getElementById('reader'),
+      chapterTitle: document.getElementById('chapterTitle'),
       btnPrev: document.getElementById('btnPrev'),
       btnNext: document.getElementById('btnNext'),
       btnPlay: document.getElementById('btnPlay'),
@@ -185,56 +180,36 @@
       pos: document.getElementById('pos'),
       posVal: document.getElementById('posVal'),
       bookMeta: document.getElementById('bookMeta'),
-      compat: document.getElementById('compat'),
       log: document.getElementById('log'),
     };
 
-    function log(msg){
-      const line = `[${new Date().toLocaleTimeString()}] ${msg}`;
-      els.log.textContent = (els.log.textContent === '—') ? line : (line + "\n" + els.log.textContent).slice(0, 1500);
-    }
-
-    function setStatus(msg){ els.status.textContent = (msg || '').toUpperCase(); }
-    function esc(s){ return (s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
-    function isSpeechSupported(){ return ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window); }
-
-    function showCompatWarning(){
-      let warnings = [];
-      if (!isSpeechSupported()) warnings.push("Navegador no suporta TTS.");
-      if (!window.JSZip) warnings.push("JSZip no carregat.");
-      if (typeof window.ePub !== 'function') warnings.push("epub.js no carregat.");
-      if (warnings.length){
-        els.compat.style.display = 'block';
-        els.compat.innerHTML = warnings.map(w => `• ${w}`).join('<br>');
-      }
-    }
-
-    // ===== TTS LOGIC =====
+    let book = null, spine = [], currentSpineIndex = 0, tocMap = {};
     let utter = null, speaking = false, paused = false;
     let sentences = [], sentenceIndex = 0;
 
+    function log(msg){
+      const line = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      els.log.textContent = (els.log.textContent === '—') ? line : (line + "\n" + els.log.textContent).slice(0, 1200);
+    }
+    function setStatus(msg){ els.status.textContent = (msg || '').toUpperCase(); }
+    function esc(s){ return (s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    // ===== TTS LOGIC =====
     function populateVoices(){
-      if (!isSpeechSupported()) return;
       const voices = speechSynthesis.getVoices();
-      const rank = (v) => {
-        const lang = (v.lang || '').toLowerCase();
-        if (lang.startsWith('ca')) return 0;
-        if (lang.startsWith('es')) return 1;
-        return 2;
-      };
-      const sorted = voices.sort((a,b)=> rank(a)-rank(b) || (a.lang||'').localeCompare(b.lang||''));
-      els.voice.innerHTML = sorted.map(v => `<option value="${v.name}">${v.name} (${v.lang})</option>`).join('');
+      els.voice.innerHTML = voices
+        .sort((a,b) => (a.lang.startsWith('ca') ? -1 : 1))
+        .map(v => `<option value="${v.name}">${v.name} (${v.lang})</option>`)
+        .join('');
     }
 
     function stopSpeaking(){
-      if (!isSpeechSupported()) return;
       speechSynthesis.cancel();
-      utter = null; speaking = false; paused = false;
+      speaking = false; paused = false;
       setStatus('Aturat');
     }
 
-    function highlightSentence(idx){
+    function highlightAndScroll(idx){
       if (!sentences.length) return;
       const before = sentences.slice(0, idx).join(' ');
       const current = sentences[idx] || '';
@@ -242,193 +217,155 @@
       els.reader.innerHTML = `<p>${esc(before)} <span class="hl">${esc(current)}</span> ${esc(after)}</p>`;
       
       const hlEl = els.reader.querySelector('.hl');
-      if(hlEl) els.reader.scrollTop = hlEl.offsetTop - (els.reader.clientHeight / 3);
+      if(hlEl) els.reader.scrollTop = hlEl.offsetTop - (els.reader.clientHeight / 2.5);
     }
 
-    function speakCurrentSentence(){
-      if (!isSpeechSupported() || !sentences.length) return;
-
-      if (sentenceIndex >= sentences.length){
-        if (currentSpineIndex < spine.length - 1){
-          renderSpineIndex(currentSpineIndex + 1).then(startSpeaking);
-        } else {
-          stopSpeaking();
-          setStatus('Fi del llibre');
-        }
+    function speakNext(){
+      if (sentenceIndex >= sentences.length) {
+        if (currentSpineIndex < spine.length - 1) renderSpineIndex(currentSpineIndex + 1).then(startSpeaking);
+        else stopSpeaking();
         return;
       }
-
       utter = new SpeechSynthesisUtterance(sentences[sentenceIndex]);
       utter.rate = parseFloat(els.rate.value);
-      const v = speechSynthesis.getVoices().find(v => v.name === els.voice.value);
-      if (v) utter.voice = v;
-
-      utter.onstart = () => {
-        speaking = true; paused = false;
-        setStatus(`Llegint ${sentenceIndex + 1}/${sentences.length}`);
-        highlightSentence(sentenceIndex);
-      };
-      utter.onend = () => { if(!paused) { sentenceIndex++; speakCurrentSentence(); } };
-      utter.onerror = (e) => { log(`TTS Error: ${e.error}`); stopSpeaking(); };
-
+      utter.voice = speechSynthesis.getVoices().find(v => v.name === els.voice.value);
+      utter.onstart = () => { setStatus(`Llegint ${sentenceIndex+1}/${sentences.length}`); highlightAndScroll(sentenceIndex); };
+      utter.onend = () => { if(!paused) { sentenceIndex++; speakNext(); } };
       speechSynthesis.speak(utter);
     }
 
     function startSpeaking(){
-      if (!isSpeechSupported()) return;
       stopSpeaking();
-      if(sentences.length) speakCurrentSentence();
+      if(sentences.length) { speaking = true; speakNext(); }
     }
 
-    // ===== EPUB LOADING LOGIC (LA TEVA LÒGICA ORIGINAL) =====
-    let book = null, spine = [], currentSpineIndex = 0;
-
+    // ===== LA TEVA LÒGICA DE CÀRREGA ROBUSTA (SENSE RETALLAR) =====
     async function toString(content){
       if (!content) return '';
       if (typeof content === 'string') return content;
-      if (content.nodeType && content.nodeType === 9) {
-        try { return new XMLSerializer().serializeToString(content); } catch { return ''; }
-      }
-      if (content instanceof Blob) {
-        try { return await content.text(); } catch { return ''; }
-      }
-      if (content instanceof ArrayBuffer) {
-        try { return new TextDecoder('utf-8').decode(new Uint8Array(content)); } catch { return ''; }
-      }
-      if (content?.buffer instanceof ArrayBuffer) {
-        try { return new TextDecoder('utf-8').decode(new Uint8Array(content)); } catch { return ''; }
-      }
+      if (content.nodeType === 9) return new XMLSerializer().serializeToString(content);
+      if (content instanceof Blob) return await content.text();
+      if (content instanceof ArrayBuffer || content?.buffer) return new TextDecoder().decode(content);
       return '';
     }
 
     async function loadChapterMarkup(item){
-      const candidates = [];
-      if (item?.href) candidates.push(item.href, decodeURI(item.href));
-      if (item?.url) candidates.push(item.url, decodeURI(item.url));
-
+      const candidates = [item.href, item.url, decodeURI(item.href || ''), decodeURI(item.url || '')];
       const uniq = [...new Set(candidates.filter(Boolean).map(s => String(s).replace(/^\/+/, '')))];
-
-      // VIA A: item.load (Short-circuit si funciona)
+      
+      // VIA A: nativa
       if (item?.load) {
         try {
           const doc = await item.load(book.load.bind(book));
-          const s = await toString(doc);
-          if (s.trim()) { log("Carregat via item.load"); return s; }
-        } catch (e) { log("Via A fallida"); }
+          const result = await toString(doc);
+          if (result.trim()) { log("Via A OK"); return result; }
+        } catch (e) {}
       }
-
-      // VIA B: book.load per candidats
+      // VIA B/C: fallback
       for (const p of uniq) {
         try {
           const raw = await book.load(p);
-          const s = await toString(raw);
-          if (s.trim()) { log(`Carregat via book.load(${p})`); return s; }
+          const result = await toString(raw);
+          if (result.trim()) { log(`Via B OK (${p})`); return result; }
         } catch (e) {}
-      }
-
-      // VIA C: archive.getText
-      if (book.archive && typeof book.archive.getText === 'function') {
-        for (const p of uniq) {
-          try {
-            const t = await book.archive.getText(p);
-            if ((t || '').trim()) { log(`Carregat via archive.getText(${p})`); return t; }
-          } catch (e) {}
-        }
       }
       return '';
     }
 
-    function cleanText(text){ return (text || '').replace(/\s+/g, ' ').replace(/\u00AD/g, '').trim(); }
+    // ===== LÒGICA DE TÍTOLS CORREGIDA =====
+    function buildTocMap(nav) {
+      tocMap = {};
+      const walk = (items) => {
+        items.forEach(it => {
+          const path = it.href.split('#')[0];
+          if (!tocMap[path]) tocMap[path] = it.label.trim();
+          if (it.subitems) walk(it.subitems);
+        });
+      };
+      if (nav && nav.toc) walk(nav.toc);
+    }
 
     function extractTextClean(markup){
       const parser = new DOMParser();
-      let doc = parser.parseFromString(markup, 'application/xhtml+xml');
-      if (doc.querySelector('parsererror')) doc = parser.parseFromString(markup, 'text/html');
+      let doc = parser.parseFromString(markup, 'text/html');
+      doc.querySelectorAll('script, style, nav, header, footer').forEach(n => n.remove());
 
-      const body = doc.body || doc.querySelector('body');
-      if (!body) return { lines: [], text: '' };
-
-      body.querySelectorAll('script,style,noscript,nav,header,footer').forEach(n => n.remove());
-
-      // Lògica de-duplicació per elements de bloc
-      const tags = 'h1,h2,h3,h4,h5,h6,p,li,blockquote';
-      const elements = Array.from(body.querySelectorAll(tags));
+      const tags = 'h1,h2,h3,h4,h5,p,li,blockquote';
+      const elements = Array.from(doc.querySelectorAll(tags));
       
       const dedupLines = [];
       elements.forEach(el => {
-        const t = cleanText(el.textContent);
-        if (t.length > 1 && !dedupLines.includes(t)) {
-          dedupLines.push(t);
+        const text = el.textContent.replace(/\s+/g, ' ').trim();
+        // Si el text d'aquest element ja està contingut en l'últim element afegit, és un duplicat de markup
+        if (text.length > 1 && !dedupLines.includes(text)) {
+          dedupLines.push(text);
         }
       });
 
-      if(!dedupLines.length) dedupLines.push(cleanText(body.textContent));
-
+      if(!dedupLines.length) dedupLines.push(doc.body.textContent.trim());
       const fullText = dedupLines.join(' ');
       return { lines: dedupLines, text: fullText };
     }
 
     async function renderSpineIndex(idx){
-      if (!book || idx < 0 || idx >= spine.length) return;
+      if (idx < 0 || idx >= spine.length) return;
       stopSpeaking();
       currentSpineIndex = idx;
       localStorage.setItem('last_epub_idx', idx);
-
+      
+      const item = spine[idx];
+      els.chapterTitle.textContent = tocMap[item.href] || item.idref || `Capítol ${idx + 1}`;
+      
       els.pos.value = idx;
       els.posVal.textContent = `${idx + 1} / ${spine.length}`;
       document.querySelectorAll('#toc a').forEach(a => a.classList.toggle('active', parseInt(a.dataset.spine) === idx));
 
       setStatus('Carregant...');
-      try {
-        const markup = await loadChapterMarkup(spine[idx]);
-        const { lines, text } = extractTextClean(markup);
-        
-        // Split en frases
-        const parts = text.match(/[^\.!\?]+[\.!\?]+(?=\s|[A-ZÀ-Ú]|$)/g) || [text];
-        sentences = parts.map(cleanText).filter(s => s.length > 2);
-        sentenceIndex = 0;
+      const markup = await loadChapterMarkup(item);
+      const { lines, text } = extractTextClean(markup);
+      
+      sentences = text.match(/[^\.!\?]+[\.!\?]+(?=\s|[A-ZÀ-Ú]|$)/g) || [text];
+      sentences = sentences.map(s => s.trim()).filter(s => s.length > 2);
+      sentenceIndex = 0;
 
-        els.reader.innerHTML = lines.map(l => `<p>${esc(l)}</p>`).join('');
-        els.reader.scrollTop = 0;
-        setStatus(sentences.length ? 'Llest' : 'Capítol buit');
-      } catch (e) { log(`Error render: ${e.message}`); }
+      els.reader.innerHTML = lines.map(l => `<p>${esc(l)}</p>`).join('');
+      els.reader.scrollTop = 0;
+      setStatus(sentences.length ? 'Llest' : 'Sense text');
     }
 
     async function loadEpub(file){
-      showCompatWarning();
-      log(`Obrint: ${file.name}`);
-      stopSpeaking();
-      setStatus('Carregant...');
-
+      log(`Obrint fitxer: ${file.name}`);
       try {
         book = ePub(await file.arrayBuffer());
         await book.ready;
-        
         const meta = await book.loaded.metadata;
+        const nav = await book.loaded.navigation;
+        
+        buildTocMap(nav); // Crucial per als títols
+        
         els.bookMeta.innerHTML = `<div style="font-weight:700; color:var(--primary);">${esc(meta.title)}</div><div style="color:var(--text-muted); font-size:0.8rem;">${esc(meta.creator)}</div>`;
         
-        spine = book.spine?.spineItems || [];
-        els.pos.max = Math.max(0, spine.length - 1);
+        spine = book.spine.spineItems;
+        els.pos.max = spine.length - 1;
         
-        const nav = await book.loaded.navigation;
         els.toc.innerHTML = '';
-        const walk = (items) => {
-          for (const it of (items || [])){
-            const a = document.createElement('a');
-            a.href = '#';
-            a.textContent = it.label;
-            const sIdx = spine.findIndex(s => s.href.includes((it.href||'').split('#')[0]));
-            a.dataset.spine = sIdx;
-            a.onclick = (e) => { e.preventDefault(); renderSpineIndex(sIdx); };
-            els.toc.appendChild(a);
-            if (it.subitems) walk(it.subitems);
-          }
+        const generateTocUI = (items) => {
+          items.forEach(it => {
+            const sIdx = spine.findIndex(s => s.href.includes(it.href.split('#')[0]));
+            if (sIdx !== -1) {
+              const a = document.createElement('a');
+              a.textContent = it.label;
+              a.dataset.spine = sIdx;
+              a.onclick = (e) => { e.preventDefault(); renderSpineIndex(sIdx); };
+              els.toc.appendChild(a);
+            }
+            if (it.subitems) generateTocUI(it.subitems);
+          });
         };
-        walk(nav?.toc);
+        generateTocUI(nav.toc);
 
         const savedIdx = parseInt(localStorage.getItem('last_epub_idx')) || 0;
         renderSpineIndex(savedIdx < spine.length ? savedIdx : 0);
-        
         [els.btnPlay, els.btnPause, els.btnStop, els.btnPrev, els.btnNext, els.pos].forEach(b => b.disabled = false);
       } catch (e) { log(`Error: ${e.message}`); setStatus('Error'); }
     }
@@ -450,11 +387,8 @@
       if(e.code === 'ArrowLeft') els.btnPrev.click();
     };
 
-    if (isSpeechSupported()){
-      populateVoices();
-      speechSynthesis.onvoiceschanged = populateVoices;
-    }
-    showCompatWarning();
+    speechSynthesis.onvoiceschanged = populateVoices;
+    populateVoices();
   </script>
 </body>
 </html>
