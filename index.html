@@ -15,7 +15,6 @@
       --border: #e2e8f0;
       --highlight: #fef08a;
     }
-
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #0f172a;
@@ -26,88 +25,45 @@
         --highlight: #854d0e;
       }
     }
-
     body {
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      margin: 0;
-      background-color: var(--bg);
-      color: var(--text-main);
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
+      margin: 0; background-color: var(--bg); color: var(--text-main);
+      display: flex; flex-direction: column; height: 100vh; overflow: hidden;
     }
-
     header {
-      background: var(--card-bg);
-      border-bottom: 1px solid var(--border);
-      padding: 0.75rem 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      z-index: 100;
+      background: var(--card-bg); border-bottom: 1px solid var(--border);
+      padding: 0.75rem 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05); z-index: 100;
     }
-
     .header-top { display: flex; justify-content: space-between; align-items: center; }
-    .header-controls { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-
     .brand { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1.1rem; color: var(--primary); }
+    .header-controls { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
     
     button {
       display: inline-flex; align-items: center; justify-content: center;
-      gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 8px;
-      border: 1px solid var(--border); background: var(--card-bg);
-      color: var(--text-main); font-weight: 500; cursor: pointer; transition: all 0.2s;
+      padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--card-bg); color: var(--text-main); font-weight: 500; cursor: pointer; transition: all 0.2s;
     }
-
     button:hover:not(:disabled) { background: var(--bg); border-color: var(--text-muted); }
     button.primary { background: var(--primary); color: white; border: none; }
     button:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    select, input[type="file"] {
-      padding: 0.4rem; border-radius: 8px; border: 1px solid var(--border);
-      background: var(--card-bg); color: var(--text-main); font-size: 0.9rem;
-    }
-
-    main {
-      display: grid; grid-template-columns: 320px 1fr; flex: 1;
-      overflow: hidden; gap: 1px; background: var(--border);
-    }
-
+    main { display: grid; grid-template-columns: 320px 1fr; flex: 1; overflow: hidden; background: var(--border); }
     aside { background: var(--card-bg); display: flex; flex-direction: column; overflow: hidden; }
-
-    .section-title {
-      padding: 1rem; font-size: 0.75rem; text-transform: uppercase;
-      color: var(--text-muted); border-bottom: 1px solid var(--border); font-weight: 600;
-    }
-
+    .section-title { padding: 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); font-weight: 600; }
     .toc { flex: 1; overflow-y: auto; padding: 0.5rem; }
-    .toc a {
-      display: block; padding: 0.6rem 0.8rem; border-radius: 6px;
-      color: var(--text-main); text-decoration: none; font-size: 0.9rem; margin-bottom: 2px;
-    }
+    .toc a { display: block; padding: 0.6rem 0.8rem; border-radius: 6px; color: var(--text-main); text-decoration: none; font-size: 0.9rem; margin-bottom: 2px; line-height: 1.3; }
     .toc a:hover { background: var(--bg); }
-    .toc a.active { background: var(--primary); color: white; }
+    .toc a.active { background: var(--primary); color: white; font-weight: 600; }
 
     .reader-container { background: var(--bg); display: flex; flex-direction: column; overflow: hidden; position: relative; }
-    .chapter-header { padding: 0.8rem 12%; background: var(--card-bg); border-bottom: 1px solid var(--border); font-weight: 700; color: var(--primary); font-size: 0.9rem; }
+    .chapter-header { padding: 0.8rem 12%; background: var(--card-bg); border-bottom: 1px solid var(--border); font-weight: 700; color: var(--primary); font-size: 0.95rem; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
     #reader { flex: 1; overflow-y: auto; padding: 2.5rem 12%; line-height: 1.8; font-size: 1.25rem; scroll-behavior: smooth; }
-    #reader p { margin-bottom: 1.3em; }
     .hl { background-color: var(--highlight); border-radius: 4px; padding: 0 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-
-    .log-area {
-      padding: 0.5rem; background: rgba(0,0,0,0.05); color: var(--text-muted);
-      font-family: monospace; font-size: 0.65rem; max-height: 80px; overflow-y: auto; border-top: 1px solid var(--border);
-    }
-
-    .progress-bar {
-      padding: 0.75rem 1.5rem; background: var(--card-bg); border-top: 1px solid var(--border);
-      display: flex; align-items: center; gap: 1rem;
-    }
-
-    input[type="range"] { flex: 1; accent-color: var(--primary); }
-    .status-badge { font-size: 0.7rem; padding: 2px 10px; border-radius: 12px; background: var(--primary); color: white; font-weight: 600; }
+    
+    .progress-bar { padding: 0.75rem 1.5rem; background: var(--card-bg); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 1rem; }
+    input[type="range"] { flex: 1; accent-color: var(--primary); cursor: pointer; }
+    .log-area { padding: 0.5rem; background: rgba(0,0,0,0.05); color: var(--text-muted); font-family: monospace; font-size: 0.65rem; max-height: 60px; overflow-y: auto; border-top: 1px solid var(--border); }
   </style>
 </head>
 <body>
@@ -117,18 +73,14 @@
       <div class="brand">📚 EPUB TTS Pro</div>
       <input id="file" type="file" accept=".epub,application/epub+zip" />
     </div>
-    
     <div class="header-controls">
-      <button id="btnPrev" disabled>⏮</button>
+      <button id="btnPrev" disabled title="Capítol anterior">⏮</button>
       <button id="btnPlay" class="primary" disabled>▶ Reproduir</button>
       <button id="btnPause" disabled>⏸ Pausa</button>
       <button id="btnStop" disabled>⏹ Atura</button>
-      <button id="btnNext" disabled>⏭</button>
-
+      <button id="btnNext" disabled title="Capítol següent">⏭</button>
       <div style="width: 1px; height: 20px; background: var(--border);"></div>
-      
       <select id="voice"></select>
-      
       <label style="font-size: 0.8rem; display:flex; align-items:center; gap:5px;">
         <input id="rate" type="range" min="0.6" max="1.8" step="0.1" value="1.0" style="width:60px" />
         <span id="rateVal">1.0×</span>
@@ -138,7 +90,7 @@
 
   <main>
     <aside>
-      <div class="section-title">Metadades i Índex</div>
+      <div class="section-title">Índex de Capítols</div>
       <div id="bookMeta" style="padding: 1rem; font-size: 0.85rem; border-bottom: 1px solid var(--border); line-height: 1.4;"></div>
       <div id="toc" class="toc"></div>
       <div class="log-area" id="log">—</div>
@@ -149,11 +101,10 @@
       <div id="reader">
         <p style="text-align:center; color:var(--text-muted); margin-top:4rem;">Carrega un fitxer per començar</p>
       </div>
-      
       <div class="progress-bar">
         <span id="posVal" style="font-size:0.8rem; font-weight:600; min-width:65px; color:var(--text-muted)">0 / 0</span>
         <input id="pos" type="range" min="0" max="0" step="1" value="0" disabled />
-        <span id="status" class="status-badge">INACTIU</span>
+        <span id="status" style="font-size: 0.7rem; padding: 2px 10px; border-radius: 12px; background: var(--primary); color: white; font-weight: 600;">INACTIU</span>
       </div>
     </div>
   </main>
@@ -162,7 +113,6 @@
   <script src="https://cdn.jsdelivr.net/npm/epubjs@0.3.92/dist/epub.min.js"></script>
 
   <script>
-    // ===== CONFIGURACIÓ =====
     const els = {
       file: document.getElementById('file'),
       toc: document.getElementById('toc'),
@@ -189,12 +139,11 @@
 
     function log(msg){
       const line = `[${new Date().toLocaleTimeString()}] ${msg}`;
-      els.log.textContent = (els.log.textContent === '—') ? line : (line + "\n" + els.log.textContent).slice(0, 1200);
+      els.log.textContent = (els.log.textContent === '—') ? line : (line + "\n" + els.log.textContent).slice(0, 1000);
     }
-    function setStatus(msg){ els.status.textContent = (msg || '').toUpperCase(); }
     function esc(s){ return (s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-    // ===== TTS LOGIC =====
+    // --- TTS ---
     function populateVoices(){
       const voices = speechSynthesis.getVoices();
       els.voice.innerHTML = voices
@@ -206,7 +155,7 @@
     function stopSpeaking(){
       speechSynthesis.cancel();
       speaking = false; paused = false;
-      setStatus('Aturat');
+      els.status.textContent = 'ATURAT';
     }
 
     function highlightAndScroll(idx){
@@ -215,7 +164,6 @@
       const current = sentences[idx] || '';
       const after = sentences.slice(idx+1).join(' ');
       els.reader.innerHTML = `<p>${esc(before)} <span class="hl">${esc(current)}</span> ${esc(after)}</p>`;
-      
       const hlEl = els.reader.querySelector('.hl');
       if(hlEl) els.reader.scrollTop = hlEl.offsetTop - (els.reader.clientHeight / 2.5);
     }
@@ -229,7 +177,7 @@
       utter = new SpeechSynthesisUtterance(sentences[sentenceIndex]);
       utter.rate = parseFloat(els.rate.value);
       utter.voice = speechSynthesis.getVoices().find(v => v.name === els.voice.value);
-      utter.onstart = () => { setStatus(`Llegint ${sentenceIndex+1}/${sentences.length}`); highlightAndScroll(sentenceIndex); };
+      utter.onstart = () => { els.status.textContent = `LLEGINT ${sentenceIndex+1}/${sentences.length}`; highlightAndScroll(sentenceIndex); };
       utter.onend = () => { if(!paused) { sentenceIndex++; speakNext(); } };
       speechSynthesis.speak(utter);
     }
@@ -239,7 +187,7 @@
       if(sentences.length) { speaking = true; speakNext(); }
     }
 
-    // ===== LA TEVA LÒGICA DE CÀRREGA ROBUSTA (SENSE RETALLAR) =====
+    // --- CARREGA ROBUSTA AMB ANUL·LACIÓ (SHORT-CIRCUIT) ---
     async function toString(content){
       if (!content) return '';
       if (typeof content === 'string') return content;
@@ -253,7 +201,6 @@
       const candidates = [item.href, item.url, decodeURI(item.href || ''), decodeURI(item.url || '')];
       const uniq = [...new Set(candidates.filter(Boolean).map(s => String(s).replace(/^\/+/, '')))];
       
-      // VIA A: nativa
       if (item?.load) {
         try {
           const doc = await item.load(book.load.bind(book));
@@ -261,7 +208,6 @@
           if (result.trim()) { log("Via A OK"); return result; }
         } catch (e) {}
       }
-      // VIA B/C: fallback
       for (const p of uniq) {
         try {
           const raw = await book.load(p);
@@ -272,11 +218,12 @@
       return '';
     }
 
-    // ===== LÒGICA DE TÍTOLS CORREGIDA =====
+    // --- LÒGICA DE TÍTOLS MILLORADA ---
     function buildTocMap(nav) {
       tocMap = {};
       const walk = (items) => {
         items.forEach(it => {
+          // El secret: normalitzem el path per trobar el fitxer a la spine més tard
           const path = it.href.split('#')[0];
           if (!tocMap[path]) tocMap[path] = it.label.trim();
           if (it.subitems) walk(it.subitems);
@@ -285,26 +232,25 @@
       if (nav && nav.toc) walk(nav.toc);
     }
 
-    function extractTextClean(markup){
-      const parser = new DOMParser();
-      let doc = parser.parseFromString(markup, 'text/html');
-      doc.querySelectorAll('script, style, nav, header, footer').forEach(n => n.remove());
+    function formatFallbackTitle(item, idx) {
+      let raw = item.idref || (item.href ? item.href.split('/').pop() : '');
+      // Neteja: capitol_01.xhtml -> capitol 01
+      return raw.replace(/\.[^/.]+$/, "") // treu extensió
+                .replace(/[_-]/g, " ")     // treu guions
+                .replace(/\b\w/g, l => l.toUpperCase()) || `Capítol ${idx + 1}`;
+    }
 
-      const tags = 'h1,h2,h3,h4,h5,p,li,blockquote';
-      const elements = Array.from(doc.querySelectorAll(tags));
-      
+    function extractTextClean(markup){
+      const doc = new DOMParser().parseFromString(markup, 'text/html');
+      doc.querySelectorAll('script, style, nav, header, footer').forEach(n => n.remove());
+      const elements = Array.from(doc.querySelectorAll('h1,h2,h3,p,li,blockquote'));
       const dedupLines = [];
       elements.forEach(el => {
         const text = el.textContent.replace(/\s+/g, ' ').trim();
-        // Si el text d'aquest element ja està contingut en l'últim element afegit, és un duplicat de markup
-        if (text.length > 1 && !dedupLines.includes(text)) {
-          dedupLines.push(text);
-        }
+        if (text.length > 1 && !dedupLines.includes(text)) dedupLines.push(text);
       });
-
       if(!dedupLines.length) dedupLines.push(doc.body.textContent.trim());
-      const fullText = dedupLines.join(' ');
-      return { lines: dedupLines, text: fullText };
+      return { lines: dedupLines, text: dedupLines.join(' ') };
     }
 
     async function renderSpineIndex(idx){
@@ -314,35 +260,36 @@
       localStorage.setItem('last_epub_idx', idx);
       
       const item = spine[idx];
-      els.chapterTitle.textContent = tocMap[item.href] || item.idref || `Capítol ${idx + 1}`;
+      // Prioritat: 1. Mapa TOC, 2. Metadada títol, 3. Fallback net
+      const title = tocMap[item.href] || item.title || formatFallbackTitle(item, idx);
+      els.chapterTitle.textContent = title;
       
       els.pos.value = idx;
       els.posVal.textContent = `${idx + 1} / ${spine.length}`;
       document.querySelectorAll('#toc a').forEach(a => a.classList.toggle('active', parseInt(a.dataset.spine) === idx));
 
-      setStatus('Carregant...');
+      els.status.textContent = 'CARREGANT...';
       const markup = await loadChapterMarkup(item);
       const { lines, text } = extractTextClean(markup);
       
-      sentences = text.match(/[^\.!\?]+[\.!\?]+(?=\s|[A-ZÀ-Ú]|$)/g) || [text];
-      sentences = sentences.map(s => s.trim()).filter(s => s.length > 2);
+      const parts = text.match(/[^\.!\?]+[\.!\?]+(?=\s|[A-ZÀ-Ú]|$)/g) || [text];
+      sentences = parts.map(s => s.trim()).filter(s => s.length > 2);
       sentenceIndex = 0;
 
       els.reader.innerHTML = lines.map(l => `<p>${esc(l)}</p>`).join('');
       els.reader.scrollTop = 0;
-      setStatus(sentences.length ? 'Llest' : 'Sense text');
+      els.status.textContent = sentences.length ? 'LLEST' : 'SENSE TEXT';
     }
 
     async function loadEpub(file){
-      log(`Obrint fitxer: ${file.name}`);
+      log(`Obrint: ${file.name}`);
       try {
         book = ePub(await file.arrayBuffer());
         await book.ready;
         const meta = await book.loaded.metadata;
         const nav = await book.loaded.navigation;
         
-        buildTocMap(nav); // Crucial per als títols
-        
+        buildTocMap(nav);
         els.bookMeta.innerHTML = `<div style="font-weight:700; color:var(--primary);">${esc(meta.title)}</div><div style="color:var(--text-muted); font-size:0.8rem;">${esc(meta.creator)}</div>`;
         
         spine = book.spine.spineItems;
@@ -351,7 +298,9 @@
         els.toc.innerHTML = '';
         const generateTocUI = (items) => {
           items.forEach(it => {
-            const sIdx = spine.findIndex(s => s.href.includes(it.href.split('#')[0]));
+            // Busquem quin índex de la spine correspon a aquest link de l'índex
+            const hrefSearch = it.href.split('#')[0];
+            const sIdx = spine.findIndex(s => s.href.includes(hrefSearch));
             if (sIdx !== -1) {
               const a = document.createElement('a');
               a.textContent = it.label;
@@ -367,13 +316,12 @@
         const savedIdx = parseInt(localStorage.getItem('last_epub_idx')) || 0;
         renderSpineIndex(savedIdx < spine.length ? savedIdx : 0);
         [els.btnPlay, els.btnPause, els.btnStop, els.btnPrev, els.btnNext, els.pos].forEach(b => b.disabled = false);
-      } catch (e) { log(`Error: ${e.message}`); setStatus('Error'); }
+      } catch (e) { log(`Error: ${e.message}`); }
     }
 
-    // ===== EVENTS =====
     els.file.onchange = e => e.target.files[0] && loadEpub(e.target.files[0]);
     els.btnPlay.onclick = () => { if (paused) { speechSynthesis.resume(); paused = false; } else startSpeaking(); };
-    els.btnPause.onclick = () => { if(speaking) { speechSynthesis.pause(); paused = true; setStatus('Pausat'); } };
+    els.btnPause.onclick = () => { if(speaking) { speechSynthesis.pause(); paused = true; els.status.textContent = 'PAUSAT'; } };
     els.btnStop.onclick = stopSpeaking;
     els.btnPrev.onclick = () => renderSpineIndex(currentSpineIndex - 1);
     els.btnNext.onclick = () => renderSpineIndex(currentSpineIndex + 1);
@@ -386,7 +334,6 @@
       if(e.code === 'ArrowRight') els.btnNext.click();
       if(e.code === 'ArrowLeft') els.btnPrev.click();
     };
-
     speechSynthesis.onvoiceschanged = populateVoices;
     populateVoices();
   </script>
