@@ -14,84 +14,108 @@
       --text-muted: #64748b;
       --border: #e2e8f0;
       --highlight: #fef08a;
+      --select-bg: #e0e7ff;
     }
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #0f172a;
-        --card-bg: #1e293b;
-        --text-main: #f1f5f9;
-        --text-muted: #94a3b8;
-        --border: #334155;
-        --highlight: #854d0e;
+        --bg: #0f172a; --card-bg: #1e293b; --text-main: #f1f5f9;
+        --text-muted: #94a3b8; --border: #334155; --highlight: #854d0e;
+        --select-bg: #312e81;
       }
     }
     body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-family: 'Inter', system-ui, sans-serif;
       margin: 0; background-color: var(--bg); color: var(--text-main);
       display: flex; flex-direction: column; height: 100vh; overflow: hidden;
     }
+
+    /* --- BOTÓ CARREGAR VISIBLE --- */
+    .file-upload-wrapper {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--primary); padding: 8px 16px; border-radius: 10px;
+      color: white; cursor: pointer; transition: background 0.2s;
+      font-weight: 600; position: relative; overflow: hidden;
+    }
+    .file-upload-wrapper:hover { background: var(--primary-hover); }
+    .file-upload-wrapper input[type="file"] {
+      position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; height: 100%; width: 100%;
+    }
+
     header {
       background: var(--card-bg); border-bottom: 1px solid var(--border);
       padding: 0.75rem 1.5rem; display: flex; flex-direction: column; gap: 0.75rem;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05); z-index: 100;
     }
     .header-top { display: flex; justify-content: space-between; align-items: center; }
-    .brand { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 1.1rem; color: var(--primary); }
     .header-controls { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
     
     button {
       display: inline-flex; align-items: center; justify-content: center;
       padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid var(--border);
-      background: var(--card-bg); color: var(--text-main); font-weight: 500; cursor: pointer; transition: all 0.2s;
+      background: var(--card-bg); color: var(--text-main); font-weight: 500; cursor: pointer; transition: 0.2s;
     }
-    button:hover:not(:disabled) { background: var(--bg); border-color: var(--text-muted); }
-    button.primary { background: var(--primary); color: white; border: none; }
-    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    button.primary { background: #111827; color: white; border: none; }
+    @media (prefers-color-scheme: dark) { button.primary { background: #f1f5f9; color: #0f172a; } }
+    button:disabled { opacity: 0.3; cursor: not-allowed; }
 
     main { display: grid; grid-template-columns: 320px 1fr; flex: 1; overflow: hidden; background: var(--border); }
     aside { background: var(--card-bg); display: flex; flex-direction: column; overflow: hidden; }
-    .section-title { padding: 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--border); font-weight: 600; }
     .toc { flex: 1; overflow-y: auto; padding: 0.5rem; }
-    .toc a { display: block; padding: 0.6rem 0.8rem; border-radius: 6px; color: var(--text-main); text-decoration: none; font-size: 0.9rem; margin-bottom: 2px; line-height: 1.3; }
-    .toc a:hover { background: var(--bg); }
-    .toc a.active { background: var(--primary); color: white; font-weight: 600; }
+    .toc a { display: block; padding: 0.6rem 0.8rem; border-radius: 6px; color: var(--text-main); text-decoration: none; font-size: 0.9rem; margin-bottom: 2px; }
+    .toc a.active { background: var(--primary); color: white; }
 
-    .reader-container { background: var(--bg); display: flex; flex-direction: column; overflow: hidden; position: relative; }
-    .chapter-header { padding: 0.8rem 12%; background: var(--card-bg); border-bottom: 1px solid var(--border); font-weight: 700; color: var(--primary); font-size: 0.95rem; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
-    #reader { flex: 1; overflow-y: auto; padding: 2.5rem 12%; line-height: 1.8; font-size: 1.25rem; scroll-behavior: smooth; }
+    .reader-container { background: var(--bg); display: flex; flex-direction: column; overflow: hidden; }
+    .chapter-header { padding: 0.8rem 12%; background: var(--card-bg); border-bottom: 1px solid var(--border); font-weight: 700; color: var(--primary); font-size: 0.95rem; }
+    
+    #reader { flex: 1; overflow-y: auto; padding: 2.5rem 12%; line-height: 1.8; font-size: 1.3rem; scroll-behavior: smooth; }
+    #reader p { 
+      padding: 4px 8px; border-radius: 6px; cursor: pointer; transition: background 0.2s; margin-bottom: 1rem;
+    }
+    #reader p:hover { background: var(--select-bg); }
+    #reader p.selected-para { border-left: 4px solid var(--primary); background: var(--select-bg); }
+    
     .hl { background-color: var(--highlight); border-radius: 4px; padding: 0 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
     
     .progress-bar { padding: 0.75rem 1.5rem; background: var(--card-bg); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 1rem; }
-    input[type="range"] { flex: 1; accent-color: var(--primary); cursor: pointer; }
-    .log-area { padding: 0.5rem; background: rgba(0,0,0,0.05); color: var(--text-muted); font-family: monospace; font-size: 0.65rem; max-height: 60px; overflow-y: auto; border-top: 1px solid var(--border); }
+    input[type="range"] { flex: 1; accent-color: var(--primary); }
+    .log-area { padding: 0.5rem; background: rgba(0,0,0,0.05); color: var(--text-muted); font-family: monospace; font-size: 0.65rem; max-height: 60px; overflow-y: auto; }
   </style>
 </head>
 <body>
 
   <header>
     <div class="header-top">
-      <div class="brand">📚 EPUB TTS Pro</div>
-      <input id="file" type="file" accept=".epub,application/epub+zip" />
+      <div style="font-weight:800; color:var(--primary); font-size: 1.2rem;">📚 EPUB TTS PRO</div>
+      
+      <div class="file-upload-wrapper">
+        <span>📂 Carregar llibre EPUB</span>
+        <input id="file" type="file" accept=".epub,application/epub+zip" />
+      </div>
     </div>
+
     <div class="header-controls">
-      <button id="btnPrev" disabled title="Capítol anterior">⏮</button>
+      <button id="btnPrev" disabled>⏮</button>
       <button id="btnPlay" class="primary" disabled>▶ Reproduir</button>
       <button id="btnPause" disabled>⏸ Pausa</button>
       <button id="btnStop" disabled>⏹ Atura</button>
-      <button id="btnNext" disabled title="Capítol següent">⏭</button>
-      <div style="width: 1px; height: 20px; background: var(--border);"></div>
-      <select id="voice"></select>
-      <label style="font-size: 0.8rem; display:flex; align-items:center; gap:5px;">
-        <input id="rate" type="range" min="0.6" max="1.8" step="0.1" value="1.0" style="width:60px" />
-        <span id="rateVal">1.0×</span>
+      <button id="btnNext" disabled>⏭</button>
+
+      <div style="width: 1px; height: 24px; background: var(--border);"></div>
+      
+      <select id="voice" style="max-width: 250px;"></select>
+      
+      <label style="font-size: 0.8rem; display:flex; align-items:center; gap:8px;">
+        Velocitat:
+        <input id="rate" type="range" min="0.6" max="1.8" step="0.1" value="1.0" style="width:70px" />
+        <span id="rateVal" style="font-weight:bold">1.0×</span>
       </label>
     </div>
   </header>
 
   <main>
     <aside>
-      <div class="section-title">Índex de Capítols</div>
       <div id="bookMeta" style="padding: 1rem; font-size: 0.85rem; border-bottom: 1px solid var(--border); line-height: 1.4;"></div>
+      <div class="section-title" style="padding:10px 1rem; font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; font-weight:bold;">Índex</div>
       <div id="toc" class="toc"></div>
       <div class="log-area" id="log">—</div>
     </aside>
@@ -99,12 +123,16 @@
     <div class="reader-container">
       <div id="chapterTitle" class="chapter-header">Capítol no seleccionat</div>
       <div id="reader">
-        <p style="text-align:center; color:var(--text-muted); margin-top:4rem;">Carrega un fitxer per començar</p>
+        <div style="text-align:center; color:var(--text-muted); margin-top:4rem;">
+          <p style="font-size: 4rem; margin-bottom:1rem;">📖</p>
+          <p>Fes clic al botó blau per carregar un llibre.</p>
+        </div>
       </div>
+      
       <div class="progress-bar">
-        <span id="posVal" style="font-size:0.8rem; font-weight:600; min-width:65px; color:var(--text-muted)">0 / 0</span>
-        <input id="pos" type="range" min="0" max="0" step="1" value="0" disabled />
-        <span id="status" style="font-size: 0.7rem; padding: 2px 10px; border-radius: 12px; background: var(--primary); color: white; font-weight: 600;">INACTIU</span>
+        <span id="posVal" style="font-size:0.8rem; font-weight:600; min-width:65px;">0 / 0</span>
+        <input id="pos" type="range" min="0" value="0" disabled />
+        <span id="status" style="font-size: 0.7rem; padding: 2px 10px; border-radius: 12px; background: var(--primary); color: white; font-weight: 700;">ESPERANT</span>
       </div>
     </div>
   </main>
@@ -136,6 +164,7 @@
     let book = null, spine = [], currentSpineIndex = 0, tocMap = {};
     let utter = null, speaking = false, paused = false;
     let sentences = [], sentenceIndex = 0;
+    let chapterParagraphs = []; // Guardem els textos dels paràgrafs per selecció
 
     function log(msg){
       const line = `[${new Date().toLocaleTimeString()}] ${msg}`;
@@ -145,11 +174,9 @@
 
     // --- TTS ---
     function populateVoices(){
-      const voices = speechSynthesis.getVoices();
-      els.voice.innerHTML = voices
-        .sort((a,b) => (a.lang.startsWith('ca') ? -1 : 1))
-        .map(v => `<option value="${v.name}">${v.name} (${v.lang})</option>`)
-        .join('');
+      const v = speechSynthesis.getVoices();
+      els.voice.innerHTML = v.sort((a,b) => (a.lang.startsWith('ca')?-1:1))
+        .map(v => `<option value="${v.name}">${v.name} (${v.lang})</option>`).join('');
     }
 
     function stopSpeaking(){
@@ -164,8 +191,8 @@
       const current = sentences[idx] || '';
       const after = sentences.slice(idx+1).join(' ');
       els.reader.innerHTML = `<p>${esc(before)} <span class="hl">${esc(current)}</span> ${esc(after)}</p>`;
-      const hlEl = els.reader.querySelector('.hl');
-      if(hlEl) els.reader.scrollTop = hlEl.offsetTop - (els.reader.clientHeight / 2.5);
+      const hl = els.reader.querySelector('.hl');
+      if(hl) els.reader.scrollTop = hl.offsetTop - (els.reader.clientHeight / 2.5);
     }
 
     function speakNext(){
@@ -177,7 +204,10 @@
       utter = new SpeechSynthesisUtterance(sentences[sentenceIndex]);
       utter.rate = parseFloat(els.rate.value);
       utter.voice = speechSynthesis.getVoices().find(v => v.name === els.voice.value);
-      utter.onstart = () => { els.status.textContent = `LLEGINT ${sentenceIndex+1}/${sentences.length}`; highlightAndScroll(sentenceIndex); };
+      utter.onstart = () => { 
+        els.status.textContent = `LLEGINT ${sentenceIndex+1}/${sentences.length}`;
+        highlightAndScroll(sentenceIndex);
+      };
       utter.onend = () => { if(!paused) { sentenceIndex++; speakNext(); } };
       speechSynthesis.speak(utter);
     }
@@ -187,70 +217,37 @@
       if(sentences.length) { speaking = true; speakNext(); }
     }
 
-    // --- CARREGA ROBUSTA AMB ANUL·LACIÓ (SHORT-CIRCUIT) ---
+    // --- CARREGA ROBUSTA (VIES A/B/C) ---
     async function toString(content){
       if (!content) return '';
       if (typeof content === 'string') return content;
       if (content.nodeType === 9) return new XMLSerializer().serializeToString(content);
       if (content instanceof Blob) return await content.text();
-      if (content instanceof ArrayBuffer || content?.buffer) return new TextDecoder().decode(content);
-      return '';
+      return new TextDecoder().decode(content);
     }
 
     async function loadChapterMarkup(item){
-      const candidates = [item.href, item.url, decodeURI(item.href || ''), decodeURI(item.url || '')];
-      const uniq = [...new Set(candidates.filter(Boolean).map(s => String(s).replace(/^\/+/, '')))];
-      
       if (item?.load) {
         try {
           const doc = await item.load(book.load.bind(book));
-          const result = await toString(doc);
-          if (result.trim()) { log("Via A OK"); return result; }
-        } catch (e) {}
+          const res = await toString(doc);
+          if (res.trim()) { log("Càrrega Via A OK"); return res; }
+        } catch(e){}
       }
-      for (const p of uniq) {
-        try {
-          const raw = await book.load(p);
-          const result = await toString(raw);
-          if (result.trim()) { log(`Via B OK (${p})`); return result; }
-        } catch (e) {}
-      }
+      try {
+        const raw = await book.load(item.href);
+        const res = await toString(raw);
+        if (res.trim()) { log("Càrrega Via B OK"); return res; }
+      } catch(e){}
       return '';
-    }
-
-    // --- LÒGICA DE TÍTOLS MILLORADA ---
-    function buildTocMap(nav) {
-      tocMap = {};
-      const walk = (items) => {
-        items.forEach(it => {
-          // El secret: normalitzem el path per trobar el fitxer a la spine més tard
-          const path = it.href.split('#')[0];
-          if (!tocMap[path]) tocMap[path] = it.label.trim();
-          if (it.subitems) walk(it.subitems);
-        });
-      };
-      if (nav && nav.toc) walk(nav.toc);
-    }
-
-    function formatFallbackTitle(item, idx) {
-      let raw = item.idref || (item.href ? item.href.split('/').pop() : '');
-      // Neteja: capitol_01.xhtml -> capitol 01
-      return raw.replace(/\.[^/.]+$/, "") // treu extensió
-                .replace(/[_-]/g, " ")     // treu guions
-                .replace(/\b\w/g, l => l.toUpperCase()) || `Capítol ${idx + 1}`;
     }
 
     function extractTextClean(markup){
       const doc = new DOMParser().parseFromString(markup, 'text/html');
       doc.querySelectorAll('script, style, nav, header, footer').forEach(n => n.remove());
       const elements = Array.from(doc.querySelectorAll('h1,h2,h3,p,li,blockquote'));
-      const dedupLines = [];
-      elements.forEach(el => {
-        const text = el.textContent.replace(/\s+/g, ' ').trim();
-        if (text.length > 1 && !dedupLines.includes(text)) dedupLines.push(text);
-      });
-      if(!dedupLines.length) dedupLines.push(doc.body.textContent.trim());
-      return { lines: dedupLines, text: dedupLines.join(' ') };
+      const paras = elements.map(el => el.textContent.replace(/\s+/g, ' ').trim()).filter(t => t.length > 1);
+      return { paras, text: paras.join(' ') };
     }
 
     async function renderSpineIndex(idx){
@@ -260,25 +257,48 @@
       localStorage.setItem('last_epub_idx', idx);
       
       const item = spine[idx];
-      // Prioritat: 1. Mapa TOC, 2. Metadada títol, 3. Fallback net
-      const title = tocMap[item.href] || item.title || formatFallbackTitle(item, idx);
-      els.chapterTitle.textContent = title;
-      
+      els.chapterTitle.textContent = tocMap[item.href] || item.idref || `Capítol ${idx+1}`;
       els.pos.value = idx;
-      els.posVal.textContent = `${idx + 1} / ${spine.length}`;
-      document.querySelectorAll('#toc a').forEach(a => a.classList.toggle('active', parseInt(a.dataset.spine) === idx));
-
-      els.status.textContent = 'CARREGANT...';
-      const markup = await loadChapterMarkup(item);
-      const { lines, text } = extractTextClean(markup);
+      els.posVal.textContent = `${idx+1} / ${spine.length}`;
       
-      const parts = text.match(/[^\.!\?]+[\.!\?]+(?=\s|[A-ZÀ-Ú]|$)/g) || [text];
-      sentences = parts.map(s => s.trim()).filter(s => s.length > 2);
+      document.querySelectorAll('#toc a').forEach(a => a.classList.toggle('active', parseInt(a.dataset.spine) === idx));
+      
+      const markup = await loadChapterMarkup(item);
+      const { paras, text } = extractTextClean(markup);
+      
+      chapterParagraphs = paras;
+      sentences = text.match(/[^\.!\?]+[\.!\?]+(?=\s|[A-ZÀ-Ú]|$)/g) || [text];
+      sentences = sentences.map(s => s.trim()).filter(s => s.length > 2);
       sentenceIndex = 0;
 
-      els.reader.innerHTML = lines.map(l => `<p>${esc(l)}</p>`).join('');
+      // Renderitzem paràgrafs clicables
+      els.reader.innerHTML = paras.map((p, i) => `<p data-idx="${i}">${esc(p)}</p>`).join('');
       els.reader.scrollTop = 0;
-      els.status.textContent = sentences.length ? 'LLEST' : 'SENSE TEXT';
+      els.status.textContent = 'LLEST';
+
+      // Event click per selecció de text
+      els.reader.querySelectorAll('p').forEach(pEl => {
+        pEl.onclick = () => {
+          stopSpeaking();
+          const pIdx = parseInt(pEl.dataset.idx);
+          // Busquem quina frase de "sentences" comença aproximadament en aquest paràgraf
+          const textAbans = chapterParagraphs.slice(0, pIdx).join(' ');
+          const caractersAbans = textAbans.length;
+          
+          let acumulat = 0;
+          for(let i=0; i < sentences.length; i++) {
+             if(acumulat >= caractersAbans) {
+               sentenceIndex = i;
+               break;
+             }
+             acumulat += sentences[i].length + 1;
+          }
+          
+          els.reader.querySelectorAll('.selected-para').forEach(el => el.classList.remove('selected-para'));
+          pEl.classList.add('selected-para');
+          els.status.textContent = "PUNT SELECCIONAT";
+        };
+      });
     }
 
     async function loadEpub(file){
@@ -289,51 +309,44 @@
         const meta = await book.loaded.metadata;
         const nav = await book.loaded.navigation;
         
-        buildTocMap(nav);
-        els.bookMeta.innerHTML = `<div style="font-weight:700; color:var(--primary);">${esc(meta.title)}</div><div style="color:var(--text-muted); font-size:0.8rem;">${esc(meta.creator)}</div>`;
-        
+        tocMap = {};
+        const walk = (items) => items.forEach(it => {
+          tocMap[it.href.split('#')[0]] = it.label.trim();
+          if(it.subitems) walk(it.subitems);
+        });
+        walk(nav.toc);
+
+        els.bookMeta.innerHTML = `<strong>${esc(meta.title)}</strong><br><span style="color:var(--text-muted)">${esc(meta.creator)}</span>`;
         spine = book.spine.spineItems;
         els.pos.max = spine.length - 1;
         
         els.toc.innerHTML = '';
-        const generateTocUI = (items) => {
-          items.forEach(it => {
-            // Busquem quin índex de la spine correspon a aquest link de l'índex
-            const hrefSearch = it.href.split('#')[0];
-            const sIdx = spine.findIndex(s => s.href.includes(hrefSearch));
-            if (sIdx !== -1) {
-              const a = document.createElement('a');
-              a.textContent = it.label;
-              a.dataset.spine = sIdx;
-              a.onclick = (e) => { e.preventDefault(); renderSpineIndex(sIdx); };
-              els.toc.appendChild(a);
-            }
-            if (it.subitems) generateTocUI(it.subitems);
-          });
-        };
-        generateTocUI(nav.toc);
+        nav.toc.forEach(it => {
+          const sIdx = spine.findIndex(s => s.href.includes(it.href.split('#')[0]));
+          if(sIdx !== -1) {
+            const a = document.createElement('a');
+            a.textContent = it.label;
+            a.dataset.spine = sIdx;
+            a.onclick = (e) => { e.preventDefault(); renderSpineIndex(sIdx); };
+            els.toc.appendChild(a);
+          }
+        });
 
         const savedIdx = parseInt(localStorage.getItem('last_epub_idx')) || 0;
         renderSpineIndex(savedIdx < spine.length ? savedIdx : 0);
         [els.btnPlay, els.btnPause, els.btnStop, els.btnPrev, els.btnNext, els.pos].forEach(b => b.disabled = false);
-      } catch (e) { log(`Error: ${e.message}`); }
+      } catch(e) { log("Error: " + e.message); }
     }
 
     els.file.onchange = e => e.target.files[0] && loadEpub(e.target.files[0]);
-    els.btnPlay.onclick = () => { if (paused) { speechSynthesis.resume(); paused = false; } else startSpeaking(); };
+    els.btnPlay.onclick = () => { if(paused) { speechSynthesis.resume(); paused = false; } else startSpeaking(); };
     els.btnPause.onclick = () => { if(speaking) { speechSynthesis.pause(); paused = true; els.status.textContent = 'PAUSAT'; } };
     els.btnStop.onclick = stopSpeaking;
     els.btnPrev.onclick = () => renderSpineIndex(currentSpineIndex - 1);
     els.btnNext.onclick = () => renderSpineIndex(currentSpineIndex + 1);
-    els.rate.oninput = () => { els.rateVal.textContent = `${parseFloat(els.rate.value).toFixed(1)}×`; };
+    els.rate.oninput = () => els.rateVal.textContent = `${parseFloat(els.rate.value).toFixed(1)}×`;
     els.pos.onchange = () => renderSpineIndex(parseInt(els.pos.value));
-    
-    window.onkeydown = e => {
-      if(e.target.tagName === 'INPUT') return;
-      if(e.code === 'Space') { e.preventDefault(); els.btnPlay.click(); }
-      if(e.code === 'ArrowRight') els.btnNext.click();
-      if(e.code === 'ArrowLeft') els.btnPrev.click();
-    };
+
     speechSynthesis.onvoiceschanged = populateVoices;
     populateVoices();
   </script>
